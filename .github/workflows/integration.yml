@@ -18,7 +18,7 @@ jobs:
           python-version: 3.
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install --upgrade Flask Flask-Bcrypt Flask-Login Flask-SQLAlchemy Flask-WTF WTForms Jinja2 Werkzeug
       - name: Bandit SAST
         run:
           bandit -r case_study -f html -o sast_bandit.html
