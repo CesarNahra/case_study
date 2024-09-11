@@ -21,7 +21,7 @@ jobs:
           pip install -r requirements.txt
       - name:
         run:
-          bandit -r todo_project -o bandit_report.html
+          bandit -r case_study -f html -o sast_bandit.html
       - name: Run Project
         run: |
           python run.py
