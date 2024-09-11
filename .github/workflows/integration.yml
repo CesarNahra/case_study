@@ -19,3 +19,9 @@ jobs:
       - name: install dependencies
         run: |
           pip install -r requirements.txt
+      - name:
+        run:
+          bandit -r todo_project -o bandit_report.html
+      - name: Run Project
+        run: |
+          python run.py
