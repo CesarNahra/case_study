@@ -24,4 +24,5 @@ jobs:
           bandit -r case_study -f html -o sast_bandit.html
       - name: Run Project
         run: |
+          cd todo_project
           python run.py
