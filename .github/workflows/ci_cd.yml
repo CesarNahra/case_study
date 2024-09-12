@@ -22,7 +22,7 @@ jobs:
         run: |
           pip install --upgrade -r requirements.txt
 
-          
+
   sast:
     needs: build  # SAST só será executado após o job de build
     runs-on: windows-latest
@@ -50,36 +50,23 @@ jobs:
           path: sast_bandit.html
 
   dast:
-    needs: build  # DAST será executado após o build
-    runs-on: windows-latest
+  needs: build  # DAST será executado após o build
+  runs-on: ubuntu-latest  # Ubuntu é recomendado para usar Docker
 
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
+  steps:
+    - name: Check out code
+      uses: actions/checkout@v3
 
-      - name: Download OWASP ZAP
-        run: |
-          curl -L https://github.com/zaproxy/zaproxy/releases/download/v2.13.0/ZAP_2_13_0_windows.exe --output ZAP.exe
+    - name: Run OWASP ZAP Docker
+      run: |
+        docker pull owasp/zap2docker-stable
+        docker run -t owasp/zap2docker-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html
 
-      - name: Install OWASP ZAP
-        run: Start-Process .\ZAP.exe /S
-
-      - name: Start OWASP ZAP
-        run: |
-          Start-Process -NoNewWindow -FilePath "C:\Program Files\OWASP\Zed Attack Proxy\ZAP.exe" -ArgumentList "-daemon -config api.disablekey=true"
-      
-      - name: Run OWASP ZAP Scan
-        run: |
-          zap-cli open-url http://localhost:5000
-          zap-cli spider http://localhost:5000
-          zap-cli active-scan http://localhost:5000
-          zap-cli report -o zap_report.html -f html
-
-      - name: Upload OWASP ZAP DAST Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: zap-report
-          path: zap_report.html
+    - name: Upload OWASP ZAP DAST Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: zap-report
+        path: zap_report.html
 
   dependency-check:
     needs: build  # Verificação de dependência só será executada após o build
