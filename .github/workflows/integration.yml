@@ -8,7 +8,7 @@ on:
 
 jobs:
   run:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v3
@@ -24,8 +24,7 @@ jobs:
           bandit -r todo_project -f html -o sast_bandit.html
       - name: Run Tests
         run: |
-          pytest --maxfail=1 --disable-warnings -q
+          cd tests && pytest
       - name: Run Project
         run: |
-          cd todo_project
-          python run.py
+          cd todo_project && python run.py
