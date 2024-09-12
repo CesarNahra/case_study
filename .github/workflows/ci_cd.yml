@@ -1,0 +1,111 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+    runs-on: windows-latest  # Ou ubuntu-latest se preferir Linux
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade -r requirements.txt
+      
+      - name: Run Tests
+        run: |
+          pytest --maxfail=1 --disable-warnings -q
+
+  sast:
+    needs: build  # SAST só será executado após o job de build
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install Bandit
+        run: pip install bandit
+
+      - name: Run Bandit SAST
+        run: |
+          bandit -r todo_project -f html -o sast_bandit.html
+
+      - name: Upload Bandit SAST Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: bandit-report
+          path: sast_bandit.html
+
+  dast:
+    needs: build  # DAST será executado após o build
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Download OWASP ZAP
+        run: |
+          curl -L https://github.com/zaproxy/zaproxy/releases/download/v2.13.0/ZAP_2_13_0_windows.exe --output ZAP.exe
+
+      - name: Install OWASP ZAP
+        run: Start-Process .\ZAP.exe /S
+
+      - name: Start OWASP ZAP
+        run: |
+          Start-Process -NoNewWindow -FilePath "C:\Program Files\OWASP\Zed Attack Proxy\ZAP.exe" -ArgumentList "-daemon -config api.disablekey=true"
+      
+      - name: Run OWASP ZAP Scan
+        run: |
+          zap-cli open-url http://localhost:5000
+          zap-cli spider http://localhost:5000
+          zap-cli active-scan http://localhost:5000
+          zap-cli report -o zap_report.html -f html
+
+      - name: Upload OWASP ZAP DAST Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-report
+          path: zap_report.html
+
+  dependency-check:
+    needs: build  # Verificação de dependência só será executada após o build
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Download OWASP Dependency-Check
+        run: |
+          curl -L https://github.com/jeremylong/DependencyCheck/releases/download/v7.4.0/dependency-check-7.4.0-release.zip --output dependency-check.zip
+
+      - name: Unzip Dependency-Check
+        run: |
+          tar -xf dependency-check.zip -C .
+
+      - name: Run Dependency-Check
+        run: |
+          .\dependency-check\bin\dependency-check.bat --project "My Project" --scan ./todo_project --out dependency-check-report.html
+
+      - name: Upload Dependency-Check Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: dependency-check-report.html
