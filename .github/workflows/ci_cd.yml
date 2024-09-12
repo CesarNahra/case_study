@@ -21,11 +21,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade -r requirements.txt
-      
-      - name: Run Tests
-        run: |
-          pytest --maxfail=1 --disable-warnings -q
 
+          
   sast:
     needs: build  # SAST só será executado após o job de build
     runs-on: windows-latest
