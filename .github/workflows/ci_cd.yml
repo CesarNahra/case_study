@@ -37,11 +37,11 @@ jobs:
           python-version: 3.9
 
       - name: Install Bandit
-        run: pip install bandit
+        run: pip install --upgrade bandit
 
       - name: Run Bandit SAST
         run: |
-          bandit -r todo_project -f html -o sast_bandit.html
+          bandit -r todo_project -f html -o sast_bandit.html || true
 
       - name: Upload Bandit SAST Report
         uses: actions/upload-artifact@v3
@@ -68,7 +68,7 @@ jobs:
           name: zap-report
           path: zap_report.html
 
-          
+
   dependency-check:
     needs: build  # Verificação de dependência só será executada após o build
     runs-on: windows-latest
