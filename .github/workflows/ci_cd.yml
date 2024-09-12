@@ -22,7 +22,7 @@ jobs:
         run: |
           pip install --upgrade -r requirements.txt
 
-
+          
   sast:
     needs: build  # SAST só será executado após o job de build
     runs-on: windows-latest
@@ -50,24 +50,25 @@ jobs:
           path: sast_bandit.html
 
   dast:
-  needs: build  # DAST será executado após o build
-  runs-on: ubuntu-latest  # Ubuntu é recomendado para usar Docker
+    needs: build  # DAST será executado após o build
+    runs-on: ubuntu-latest  # Usando Ubuntu para rodar Docker
 
-  steps:
-    - name: Check out code
-      uses: actions/checkout@v3
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
 
-    - name: Run OWASP ZAP Docker
-      run: |
-        docker pull owasp/zap2docker-stable
-        docker run -t owasp/zap2docker-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html
+      - name: Run OWASP ZAP Docker
+        run: |
+          docker pull owasp/zap2docker-stable
+          docker run -t owasp/zap2docker-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html
 
-    - name: Upload OWASP ZAP DAST Report
-      uses: actions/upload-artifact@v3
-      with:
-        name: zap-report
-        path: zap_report.html
+      - name: Upload OWASP ZAP DAST Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-report
+          path: zap_report.html
 
+          
   dependency-check:
     needs: build  # Verificação de dependência só será executada após o build
     runs-on: windows-latest
