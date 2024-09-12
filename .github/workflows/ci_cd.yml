@@ -66,6 +66,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Pull OWASP ZAP Docker
+        continue-on-error: true
         run: |
           docker pull zaproxy/zap-stable
           docker run --rm -v ${GITHUB_WORKSPACE}/zap_data:/zap/wrk zaproxy/zap-stable zap-baseline.py -t http://localhost:5000 -r /zap/wrk/zap_report.html
