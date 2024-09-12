@@ -67,7 +67,7 @@ jobs:
 
       - name: Run OWASP ZAP Docker
         run: |
-          docker run -t owasp/zap2docker-stable:2.13.0 zap-baseline.py -t http://localhost:5000 -r zap_report.html
+          docker run -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html
 
       - name: Upload OWASP ZAP DAST Report
         uses: actions/upload-artifact@v3
@@ -94,7 +94,7 @@ jobs:
 
       - name: Run Dependency-Check
         run: |
-          .\dependency-check\bin\dependency-check.bat --project "My Project" --scan ./todo_project --out dependency-check-report.html
+          .\dependency-check\bin\dependency-check.bat --project "Estudo de Caso Hackers do Bem" --scan ./todo_project --out dependency-check-report.html
 
       - name: Upload Dependency-Check Report
         uses: actions/upload-artifact@v3
