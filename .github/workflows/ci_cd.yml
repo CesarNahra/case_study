@@ -50,17 +50,23 @@ jobs:
           path: sast_bandit.html
 
   dast:
-    needs: build  # DAST será executado após o build
-    runs-on: ubuntu-latest  # Usando Ubuntu para rodar Docker
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out code
         uses: actions/checkout@v3
 
+      - name: Docker Login
+        run: |
+          echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      - name: Pull OWASP ZAP Docker
+        run: |
+          docker pull owasp/zap2docker-stable:2.13.0
+
       - name: Run OWASP ZAP Docker
         run: |
-          docker pull owasp/zap2docker-stable
-          docker run -t owasp/zap2docker-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html
+          docker run -t owasp/zap2docker-stable:2.13.0 zap-baseline.py -t http://localhost:5000 -r zap_report.html
 
       - name: Upload OWASP ZAP DAST Report
         uses: actions/upload-artifact@v3
