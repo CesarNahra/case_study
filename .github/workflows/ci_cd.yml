@@ -117,7 +117,7 @@ jobs:
           path: dependency-check-report.html
 
 
-  pull_request_to_review:
+  deploy:
     needs: [sast, dast, dependency-check]
     runs-on: ubuntu-latest
 
