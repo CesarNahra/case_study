@@ -1,0 +1,132 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade -r requirements.txt
+
+          
+  sast:
+    needs: build
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install Bandit
+        run: pip install --upgrade bandit
+
+      - name: Run Bandit SAST
+        run: |
+          bandit -r todo_project -f html -o sast_bandit.html || true
+
+      - name: Upload Bandit SAST Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: bandit-report
+          path: sast_bandit.html
+
+  dast:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Flask app
+        run: |
+          python run.py &
+        env:
+          FLASK_ENV: development
+
+      - name: Docker Login
+        run: |
+          echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      - name: Pull OWASP ZAP Docker
+        continue-on-error: true
+        run: |
+          docker pull zaproxy/zap-stable
+          docker run --rm -v ${GITHUB_WORKSPACE}/zap_data:/zap/wrk zaproxy/zap-stable zap-baseline.py -t http://localhost:5000 -r /zap/wrk/zap_report.html
+
+      - name: Upload OWASP ZAP DAST Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-report
+          path: ${GITHUB_WORKSPACE}/zap_data/zap_report.html
+
+
+  dependency-check:
+    needs: build
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Download OWASP Dependency-Check
+        run: |
+          curl -L https://github.com/jeremylong/DependencyCheck/releases/download/v7.4.0/dependency-check-7.4.0-release.zip --output dependency-check.zip
+
+      - name: Unzip Dependency-Check
+        run: |
+          tar -xf dependency-check.zip -C .
+
+      - name: Run Dependency-Check
+        run: |
+          .\dependency-check\bin\dependency-check.bat --project "Estudo de Caso Hackers do Bem" --scan ./todo_project --out dependency-check-report.html
+
+      - name: Upload Dependency-Check Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: dependency-check-report.html
+
+
+  deploy:
+    needs: [sast, dast, dependency-check]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Merging
+        run: |
+          gh pr merge 1 --merge
+        env: 
+          GITHUB_TOKEN: ${{ github.token }}
