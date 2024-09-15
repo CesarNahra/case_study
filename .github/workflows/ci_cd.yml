@@ -130,3 +130,9 @@ jobs:
           gh pr create --base master --head develop --title "Merge develop into master" --body "Automated Pull Request to merge changes from develop to master."
         env:
           GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Merging
+        run: |
+          gh pr merge 1 --merge
+        env: 
+          GITHUB_TOKEN: ${{ github.token }}
