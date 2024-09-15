@@ -117,7 +117,7 @@ jobs:
           path: dependency-check-report.html
 
 
-  create_pull_request:
+  deploy:
     needs: [dast, sast, dependency-check]
     runs-on: ubuntu-latest
 
@@ -134,3 +134,4 @@ jobs:
           body: "Pull Request integrado a pipeline CI/CD"
           branch: develop
           base: master
+          merge: true
