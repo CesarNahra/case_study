@@ -134,4 +134,3 @@ jobs:
           body: "Pull Request integrado a pipeline CI/CD"
           branch: develop
           base: master
-          head: develop
