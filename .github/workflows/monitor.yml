@@ -1,0 +1,20 @@
+name: UptimeRobot Monitoring
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+
+jobs:
+  check_uptime:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check UptimeRobot Monitors
+        id: check_uptime
+        env:
+          UPTIME_ROBOT_API_KEY: ${{ secrets.UPTIME_ROBOT_API_KEY }}
+        run: |
+          curl -X POST -d "api_key=${UPTIME_ROBOT_API_KEY}&format=json" \
+               -H "Content-Type: application/x-www-form-urlencoded" \
+               https://api.uptimerobot.com/v2/getMonitors \
+               | jq '.monitors[] | {friendly_name, status}'
