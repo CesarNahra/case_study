@@ -117,30 +117,14 @@ jobs:
           path: dependency-check-report.html
 
 
-  deploy:
+  pull_request_to_review:
     needs: [sast, dast, dependency-check]
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Install GitHub CLI
-        run: |
-          sudo apt update
-          sudo apt install gh
-
-      - name: Authenticate GitHub CLI
-        run: gh auth login --with-token
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/checkout@v3
 
       - name: Create Pull Request
-        id: create_pr
         run: |
           gh pr create --base master --head develop --title "Merge develop into master" --body "Automated Pull Request to merge changes from develop to master."
-
-      - name: Merge Pull Request
-        run: |
-          pr_number=$(gh pr list --state open --head develop --json number --jq '.[0].number')
-          gh pr merge $pr_number --merge 
